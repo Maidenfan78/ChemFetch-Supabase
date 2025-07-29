@@ -17,15 +17,15 @@ It supports both the **mobile app** (`chemfetch-mobile`) and the **web client da
 
 ## 📊 Tables
 
-### `products`
+### `product`
 
 The master catalog of recognized chemical products across all users.
 
 ```sql
-CREATE TABLE products (
+CREATE TABLE product (
   id SERIAL PRIMARY KEY,
   barcode TEXT NOT NULL,
-  product_name TEXT,
+  name TEXT,
   manufacturer TEXT,
   contents_size_weight TEXT,
   sds_url TEXT,
@@ -41,7 +41,7 @@ Edit
 CREATE TABLE user_chemical_watch_list (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
+  product_id INTEGER REFERENCES product(id) ON DELETE CASCADE,
   quantity_on_hand INTEGER,
   location TEXT,
   sds_available BOOLEAN,
@@ -106,9 +106,10 @@ Copy
 Edit
 chemfetch-supabase/
 ├── supabase/
-│   ├── config.toml              # Supabase project config
-│   └── migrations/              # Timestamped SQL migrations
-│       └── 20250728_initial_schema.sql
+│   ├── config.toml
+│   └── migrations/
+│       ├── initial_schema.sql
+│       └── rls_policies.sql
 ├── database.types.ts            # Optional TS type mapping
 └── README.md
 📎 Related Repos
@@ -125,6 +126,3 @@ Copy
 Edit
 
 ---
-
-
-

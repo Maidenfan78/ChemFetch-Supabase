@@ -1,8 +1,8 @@
--- Create products table
-CREATE TABLE products (
+-- Create product table
+CREATE TABLE product (
   id SERIAL PRIMARY KEY,
   barcode TEXT NOT NULL,
-  product_name TEXT,
+  name TEXT,
   manufacturer TEXT,
   contents_size_weight TEXT,
   sds_url TEXT,
