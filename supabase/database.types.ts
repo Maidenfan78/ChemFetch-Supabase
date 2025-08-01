@@ -7,34 +7,117 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          query?: string
-          extensions?: Json
-          operationName?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.12 (cd3cf9e)"
   }
   public: {
     Tables: {
-      [_ in never]: never
+      product: {
+        Row: {
+          barcode: string
+          contents_size_weight: string | null
+          created_at: string | null
+          id: number
+          manufacturer: string | null
+          name: string | null
+          sds_url: string | null
+        }
+        Insert: {
+          barcode: string
+          contents_size_weight?: string | null
+          created_at?: string | null
+          id?: number
+          manufacturer?: string | null
+          name?: string | null
+          sds_url?: string | null
+        }
+        Update: {
+          barcode?: string
+          contents_size_weight?: string | null
+          created_at?: string | null
+          id?: number
+          manufacturer?: string | null
+          name?: string | null
+          sds_url?: string | null
+        }
+        Relationships: []
+      }
+      user_chemical_watch_list: {
+        Row: {
+          comments_swp: string | null
+          consequence: string | null
+          created_at: string | null
+          dangerous_good: boolean | null
+          dangerous_goods_class: string | null
+          description: string | null
+          hazardous_substance: boolean | null
+          id: string
+          likelihood: string | null
+          location: string | null
+          packing_group: string | null
+          product_id: number | null
+          quantity_on_hand: number | null
+          risk_rating: string | null
+          sds_available: boolean | null
+          sds_issue_date: string | null
+          subsidiary_risks: string | null
+          swp_required: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          comments_swp?: string | null
+          consequence?: string | null
+          created_at?: string | null
+          dangerous_good?: boolean | null
+          dangerous_goods_class?: string | null
+          description?: string | null
+          hazardous_substance?: boolean | null
+          id?: string
+          likelihood?: string | null
+          location?: string | null
+          packing_group?: string | null
+          product_id?: number | null
+          quantity_on_hand?: number | null
+          risk_rating?: string | null
+          sds_available?: boolean | null
+          sds_issue_date?: string | null
+          subsidiary_risks?: string | null
+          swp_required?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          comments_swp?: string | null
+          consequence?: string | null
+          created_at?: string | null
+          dangerous_good?: boolean | null
+          dangerous_goods_class?: string | null
+          description?: string | null
+          hazardous_substance?: boolean | null
+          id?: string
+          likelihood?: string | null
+          location?: string | null
+          packing_group?: string | null
+          product_id?: number | null
+          quantity_on_hand?: number | null
+          risk_rating?: string | null
+          sds_available?: boolean | null
+          sds_issue_date?: string | null
+          subsidiary_risks?: string | null
+          swp_required?: boolean | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_chemical_watch_list_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -169,11 +252,7 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },
 } as const
-

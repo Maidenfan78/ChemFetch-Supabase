@@ -26,6 +26,7 @@ CREATE TABLE product (
   id SERIAL PRIMARY KEY,
   barcode TEXT NOT NULL,
   name TEXT,
+  manufacturer TEXT,
   contents_size_weight TEXT,
   sds_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now()),

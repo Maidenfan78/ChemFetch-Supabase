@@ -1,9 +1,8 @@
--- Create products table
-CREATE TABLE products (
+-- Create product table
+CREATE TABLE product (
   id SERIAL PRIMARY KEY,
   barcode TEXT NOT NULL,
-  product_name TEXT,
-  manufacturer TEXT,
+  product TEXT,
   contents_size_weight TEXT,
   sds_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now()),
@@ -14,7 +13,7 @@ CREATE TABLE products (
 CREATE TABLE user_chemical_watch_list (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
+  product_id INTEGER REFERENCES product(id) ON DELETE CASCADE,
   quantity_on_hand INTEGER,
   location TEXT,
   sds_available BOOLEAN,
