@@ -2,7 +2,7 @@
 CREATE TABLE product (
   id SERIAL PRIMARY KEY,
   barcode TEXT NOT NULL,
-  name TEXT,
+  product TEXT,
   contents_size_weight TEXT,
   sds_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now()),
@@ -29,6 +29,5 @@ CREATE TABLE user_chemical_watch_list (
   risk_rating TEXT,
   swp_required BOOLEAN,
   comments_swp TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now()),
-  CONSTRAINT uq_user_chemical_watch_list_user_product UNIQUE (user_id, product_id)
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now())
 );

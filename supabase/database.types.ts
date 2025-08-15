@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
@@ -43,6 +43,56 @@ export type Database = {
           sds_url?: string | null
         }
         Relationships: []
+      }
+      sds_metadata: {
+        Row: {
+          created_at: string | null
+          dangerous_good: boolean | null
+          dangerous_goods_class: string | null
+          description: string | null
+          hazardous_substance: boolean | null
+          issue_date: string | null
+          packing_group: string | null
+          product_id: number
+          raw_json: Json | null
+          subsidiary_risks: string | null
+          vendor: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dangerous_good?: boolean | null
+          dangerous_goods_class?: string | null
+          description?: string | null
+          hazardous_substance?: boolean | null
+          issue_date?: string | null
+          packing_group?: string | null
+          product_id: number
+          raw_json?: Json | null
+          subsidiary_risks?: string | null
+          vendor?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dangerous_good?: boolean | null
+          dangerous_goods_class?: string | null
+          description?: string | null
+          hazardous_substance?: boolean | null
+          issue_date?: string | null
+          packing_group?: string | null
+          product_id?: number
+          raw_json?: Json | null
+          subsidiary_risks?: string | null
+          vendor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sds_metadata_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "product"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_chemical_watch_list: {
         Row: {
