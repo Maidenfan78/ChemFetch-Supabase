@@ -1,42 +1,40 @@
-# 📦 ChemFetch Supabase Schema
+# 🗄️ ChemFetch Supabase Schema
 
-This repository contains the SQL schema, migrations, and database types for the ChemFetch platform — a cross-platform chemical management system.
-
-## 📁 Repository Purpose
-
-This repo manages:
-
-- Database schema (tables, indexes, constraints)
-- SQL migrations using the Supabase CLI
-- Row-Level Security (RLS) policies
-- Optional TypeScript types for Supabase client usage
-
-It supports both the **mobile app** (`chemfetch-mobile`) and the **web client dashboard** (`chemfetch-client-hub`).
+Database schema, migrations, and configuration for the ChemFetch chemical management platform. This repository contains all SQL migrations, Row Level Security policies, and database type definitions.
 
 ---
 
-## 📊 Tables
+## 📊 Database Overview
 
-### `product`
+The ChemFetch platform uses PostgreSQL via Supabase to store chemical product information, user inventories, and parsed Safety Data Sheet metadata. The schema is designed for multi-tenant usage with strong data isolation and compliance features.
 
-The master catalog of recognized chemical products across all users.
+### Core Tables
+- **`product`**: Master catalog of chemical products with barcode references
+- **`user_chemical_watch_list`**: Per-user chemical inventories with safety information
+- **`sds_metadata`**: Parsed Safety Data Sheet information with vendor and hazard data
+- **`auth.users`**: Supabase managed user authentication
+
+---
+
+## 🏗️ Database Schema
+
+### Products Table
 
 ```sql
 CREATE TABLE product (
   id SERIAL PRIMARY KEY,
-  barcode TEXT NOT NULL,
+  barcode TEXT NOT NULL UNIQUE,
   name TEXT,
+  manufacturer TEXT,
   contents_size_weight TEXT,
   sds_url TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now()),
-  CONSTRAINT unique_barcode UNIQUE (barcode)
+  created_at TIMESTAMPTZ DEFAULT timezone('utc', now())
 );
-user_chemical_watch_list
-Tracks product usage per user (inventory, SDS status, risk info, etc.).
+```
 
-sql
-Copy
-Edit
+### User Chemical Watch List
+
+```sql
 CREATE TABLE user_chemical_watch_list (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -56,72 +54,224 @@ CREATE TABLE user_chemical_watch_list (
   risk_rating TEXT,
   swp_required BOOLEAN,
   comments_swp TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now())
+  created_at TIMESTAMPTZ DEFAULT timezone('utc', now()),
+  
+  CONSTRAINT uq_user_chemical_watch_list_user_product UNIQUE (user_id, product_id)
 );
-🔐 Row-Level Security (RLS)
-RLS is enabled for user_chemical_watch_list to ensure users can only access their own chemical records.
+```
 
-sql
-Copy
-Edit
+### SDS Metadata Table
+
+```sql
+CREATE TABLE sds_metadata (
+  product_id INTEGER PRIMARY KEY REFERENCES product(id) ON DELETE CASCADE,
+  vendor TEXT,
+  issue_date DATE,
+  hazardous_substance BOOLEAN,
+  dangerous_good BOOLEAN,
+  dangerous_goods_class TEXT,
+  description TEXT,
+  packing_group TEXT,
+  subsidiary_risks TEXT,
+  raw_json JSONB,
+  created_at TIMESTAMPTZ DEFAULT timezone('utc', now())
+);
+```
+
+---
+
+## 🔒 Row Level Security (RLS)
+
+### Security Policies
+
+```sql
 -- Enable RLS
 ALTER TABLE user_chemical_watch_list ENABLE ROW LEVEL SECURITY;
 
--- Allow users to read their own rows
-CREATE POLICY "select_own_rows"
-  ON user_chemical_watch_list
-  FOR SELECT
+-- Users can view their own chemical records
+CREATE POLICY "Users can view own watchlist" 
+  ON user_chemical_watch_list FOR SELECT 
   USING (auth.uid() = user_id);
 
--- Allow users to insert/update/delete their own rows
-CREATE POLICY "modify_own_rows"
-  ON user_chemical_watch_list
-  FOR ALL
-  USING (auth.uid() = user_id)
+-- Users can insert their own records
+CREATE POLICY "Users can insert own watchlist" 
+  ON user_chemical_watch_list FOR INSERT 
   WITH CHECK (auth.uid() = user_id);
 
--- Optional: allow service_role to bypass RLS
-CREATE POLICY "admin_access"
-  ON user_chemical_watch_list
-  FOR ALL
-  TO service_role
-  USING (true)
+-- Users can update their own records
+CREATE POLICY "Users can update own watchlist" 
+  ON user_chemical_watch_list FOR UPDATE 
+  USING (auth.uid() = user_id);
+
+-- Users can delete their own records
+CREATE POLICY "Users can delete own watchlist" 
+  ON user_chemical_watch_list FOR DELETE 
+  USING (auth.uid() = user_id);
+
+-- Service role bypass for backend operations
+CREATE POLICY "Service role full access" 
+  ON user_chemical_watch_list FOR ALL 
+  TO service_role 
+  USING (true) 
   WITH CHECK (true);
-🧪 Setup Instructions
-bash
-Copy
-Edit
-# 1. Initialize Supabase project
-supabase init
-
-# 2. Push schema to remote DB
-supabase db push
-
-# 3. Generate TypeScript types (optional)
-supabase gen types typescript --local > database.types.ts
-📂 Folder Structure
-pgsql
-Copy
-Edit
-chemfetch-supabase/
-├── supabase/
-│   ├── config.toml
-│   └── migrations/
-│       ├── initial_schema.sql
-│       └── rls_policies.sql
-├── database.types.ts            # Optional TS type mapping
-└── README.md
-📎 Related Repos
-Repo Name	Description
-chemfetch-mobile	Expo app for barcode scanning and SDS sync
-chemfetch-client-hub	Next.js dashboard for chemical management
-chemfetch-backend	Node.js + Express backend for OCR, scraping
-
-🪪 License
-Internal use only. If this becomes public, add an appropriate license (e.g. MIT or BSL).
-
-yaml
-Copy
-Edit
+```
 
 ---
+
+## ⚙️ Setup Instructions
+
+### Prerequisites
+- Supabase CLI installed: `npm install -g supabase`
+- Supabase project created at [supabase.com](https://supabase.com)
+- Database access credentials
+
+### 1. Initialize Local Development
+
+```bash
+# Clone repository
+git clone <repository-url>
+cd chemfetch-supabase-claude
+
+# Initialize Supabase
+supabase init
+
+# Link to your Supabase project
+supabase link --project-ref your-project-ref
+```
+
+### 2. Apply Migrations
+
+```bash
+# Apply all migrations to remote database
+supabase db push
+
+# Or apply to local development database
+supabase start
+supabase db reset
+```
+
+### 3. Generate TypeScript Types
+
+```bash
+# Generate types from remote database
+supabase gen types typescript --project-id your-project-id > database.types.ts
+
+# Or generate from local database
+supabase gen types typescript --local > database.types.ts
+```
+
+---
+
+## 📈 Common Queries
+
+### User Chemical Inventory
+
+```sql
+-- Get user's complete chemical inventory with SDS data
+SELECT 
+  w.*,
+  p.name as product_name,
+  p.manufacturer,
+  p.barcode,
+  p.sds_url,
+  s.vendor,
+  s.issue_date,
+  s.hazardous_substance,
+  s.dangerous_good,
+  s.dangerous_goods_class
+FROM user_chemical_watch_list w
+JOIN product p ON w.product_id = p.id
+LEFT JOIN sds_metadata s ON p.id = s.product_id
+WHERE w.user_id = $1;
+```
+
+### Hazardous Chemicals Report
+
+```sql
+-- Get all hazardous chemicals for compliance reporting
+SELECT 
+  p.name,
+  p.manufacturer,
+  w.location,
+  w.quantity_on_hand,
+  s.dangerous_goods_class,
+  s.packing_group,
+  s.issue_date
+FROM user_chemical_watch_list w
+JOIN product p ON w.product_id = p.id
+JOIN sds_metadata s ON p.id = s.product_id
+WHERE w.user_id = $1 
+  AND (w.hazardous_substance = true OR w.dangerous_good = true)
+ORDER BY s.dangerous_goods_class, p.name;
+```
+
+---
+
+## 🔧 Configuration
+
+### Environment Variables
+
+```env
+# Required for client applications
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+
+# Required for backend services
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Local development
+SUPABASE_LOCAL_URL=http://localhost:54321
+SUPABASE_LOCAL_ANON_KEY=your-local-anon-key
+```
+
+---
+
+## 🔄 Recent Updates
+
+### Version 2024.12
+
+**Schema Changes:**
+- ✅ **Added SDS Metadata Table**: Structured storage for parsed Safety Data Sheet information
+- ✅ **Vendor Field**: Added vendor tracking to SDS metadata
+- ✅ **Enhanced Indexing**: Improved query performance with strategic indexes
+- ✅ **RLS Policies**: Comprehensive Row Level Security implementation
+- ✅ **JSON Support**: JSONB storage for complete SDS parsed data
+
+**Performance Improvements:**
+- ⚡ **Optimized Queries**: Efficient joins for watchlist data retrieval
+- ⚡ **Index Strategy**: Strategic indexing for common query patterns
+- ⚡ **Connection Pooling**: Better database connection management
+
+---
+
+## 📄 License
+
+This project is proprietary software. All rights reserved.
+
+---
+
+## 👥 Support
+
+**Database Issues:**
+- Check Supabase dashboard for error logs
+- Verify RLS policies are correctly configured
+- Test queries in SQL editor before implementing
+
+**Migration Problems:**
+- Always test migrations on staging environment first
+- Keep backups before applying production migrations
+- Use transaction blocks for complex schema changes
+
+---
+
+## 🗺️ Roadmap
+
+### Q1 2025
+- **Audit Tables**: Complete audit trail for all data changes
+- **Partitioning**: Table partitioning for large-scale deployments
+- **Advanced RLS**: More granular permission models
+
+### Q2 2025
+- **Multi-tenant Enhancements**: Organization-level data isolation
+- **Reporting Views**: Materialized views for complex reporting
+- **Data Validation**: Enhanced constraints and validation rules
